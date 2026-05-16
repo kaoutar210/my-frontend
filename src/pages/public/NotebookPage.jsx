@@ -11,7 +11,7 @@ const PAGE_DATA = {
   product: {
     name: "Codelink Notebook",
     subtitle: "Premium Edition",
-    price: "99",
+    price: "149",
     currency: "DH",
     description: "Accédez à une plateforme complète avec un simple scan. Transformez votre façon d'apprendre le code avec l'alliance parfaite du papier et du numérique."
   },
