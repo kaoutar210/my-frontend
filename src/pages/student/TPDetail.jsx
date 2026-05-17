@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronLeft, ChevronRight, Minus, Plus, Maximize2,
   Loader2, AlertCircle
@@ -9,9 +6,6 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from "../../components/layout/SidebarStudent";
 import { tpService } from "../../services/api";
-
-// ─── Worker PDF.js (obligatoire pour react-pdf) ───────────────────────────────
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 /* ─────────────────────────────────────────────
    SCOPED STYLES — MOBILE FIRST
@@ -157,14 +151,12 @@ const style = `
     flex-shrink: 0;
   }
 
-  /* center page nav */
+  /* center page nav — hidden on mobile */
   .td-toolbar-center {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 4px;
   }
-  @media (max-width: 599px) { .td-toolbar-center { display: none; } }
-
   .td-page-btn {
     width: 28px; height: 28px;
     border-radius: 8px;
@@ -175,34 +167,13 @@ const style = `
     cursor: pointer;
     transition: background .2s, color .2s;
   }
-  .td-page-btn:hover:not(:disabled) { background: rgba(255,255,255,.14); color: var(--white); }
-  .td-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .td-page-input {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--white);
-    background: rgba(255,255,255,.1);
-    border: 1px solid rgba(255,255,255,.15);
-    border-radius: 6px;
-    width: 36px;
-    text-align: center;
-    padding: 2px 4px;
-    outline: none;
-  }
-  .td-page-input:focus { border-color: var(--orange); }
-  /* hide number spinner arrows */
-  .td-page-input::-webkit-inner-spin-button,
-  .td-page-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  .td-page-input[type=number] { -moz-appearance: textfield; }
-
+  .td-page-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
   .td-page-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 500;
     color: var(--white);
-    padding: 0 6px;
+    padding: 0 10px;
     letter-spacing: .06em;
     white-space: nowrap;
   }
@@ -245,8 +216,7 @@ const style = `
     letter-spacing: .04em;
   }
 
-  @media (max-width: 400px) { .td-zoom { display: none; } }
-
+  /* fullscreen icon btn — hidden on mobile */
   .td-icon-btn {
     display: none;
     width: 32px; height: 32px;
@@ -286,97 +256,17 @@ const style = `
     border-radius: 4px;
     width: 100%;
     max-width: 860px;
+    min-height: 600px;
     position: relative;
     overflow: hidden;
+    transition: transform .3s;
+    transform-origin: top center;
   }
   .td-sheet::before {
     content: '';
     display: block;
     height: 4px;
     background: linear-gradient(90deg, var(--orange), var(--blue));
-  }
-
-  /* react-pdf canvas responsive */
-  .td-sheet .react-pdf__Document {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .td-sheet .react-pdf__Page {
-    width: 100% !important;
-  }
-  .td-sheet .react-pdf__Page canvas {
-    width: 100% !important;
-    height: auto !important;
-    display: block;
-  }
-
-  /* ── PDF loading / error inside sheet ── */
-  .td-pdf-loader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 24px;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .td-pdf-loader p {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: .08em;
-  }
-  .td-pdf-error {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 24px;
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-  .td-pdf-error p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-  }
-
-  /* ── mobile bottom pagination ── */
-  .td-mobile-nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--white);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  @media (min-width: 600px) { .td-mobile-nav { display: none; } }
-
-  .td-mobile-btn {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--ink);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all .2s;
-  }
-  .td-mobile-btn:hover:not(:disabled) {
-    background: var(--bg);
-    border-color: var(--orange);
-    color: var(--orange);
-  }
-  .td-mobile-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .td-mobile-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--ink);
-    letter-spacing: .06em;
   }
 
   /* ── fallback content ── */
@@ -434,6 +324,7 @@ const style = `
     max-width: 580px;
   }
 
+  /* objectives box */
   .td-objectives {
     border: 1.5px solid var(--border);
     border-radius: 16px;
@@ -495,28 +386,63 @@ const style = `
   /* ════════════════════════════════════════
      RESPONSIVE BREAKPOINTS
   ════════════════════════════════════════ */
+
+  /* Tablet: 600px+ */
   @media (min-width: 600px) {
     .td-toolbar {
       padding: 0 20px;
       height: 56px;
       flex-wrap: nowrap;
     }
-    .td-icon-btn { display: flex; }
-    .td-viewer { padding: 32px 20px; }
-    .td-fallback { padding: 48px 40px; }
-    .td-objectives { padding: 28px 32px; border-radius: 20px; }
+    .td-toolbar-center {
+      display: flex;
+    }
+    .td-icon-btn {
+      display: flex;
+    }
+    .td-viewer {
+      padding: 32px 20px;
+    }
+    .td-fallback {
+      padding: 48px 40px;
+    }
+    .td-objectives {
+      padding: 28px 32px;
+      border-radius: 20px;
+    }
+    .td-diff-pill {
+      display: inline-flex;
+    }
   }
 
+  /* Desktop: 1024px+ */
   @media (min-width: 1024px) {
-    .td-toolbar { padding: 0 24px; }
-    .td-toolbar-left { gap: 14px; }
-    .td-toolbar-right { gap: 14px; }
-    .td-file-name { font-size: 14px; max-width: 380px; }
-    .td-viewer { padding: 40px 24px; }
-    .td-fallback { padding: 64px 72px; }
-    .td-zoom { gap: 10px; padding: 5px 12px; }
+    .td-toolbar {
+      padding: 0 24px;
+    }
+    .td-toolbar-left {
+      gap: 14px;
+    }
+    .td-toolbar-right {
+      gap: 14px;
+    }
+    .td-file-name {
+      font-size: 14px;
+      max-width: 380px;
+    }
+    .td-viewer {
+      padding: 40px 24px;
+    }
+    .td-fallback {
+      padding: 64px 72px;
+    }
+    .td-zoom {
+      gap: 10px;
+      padding: 5px 12px;
+    }
   }
 
+  /* Touch: remove pointer hover states */
   @media (hover: none) {
     .td-back-btn:hover { background: rgba(255,255,255,.08); }
     .td-page-btn:hover { background: rgba(255,255,255,.07); color: var(--muted); }
@@ -535,38 +461,6 @@ const TPDetail = () => {
   const [loading, setLoading] = useState(true);
   const [zoom, setZoom] = useState(100);
 
-  // ── états PDF ──────────────────────────────────────────────────────────────
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [pageInputVal, setPageInputVal] = useState('1');
-  const [containerWidth, setContainerWidth] = useState(800);
-  const [pdfError, setPdfError] = useState(false);
-
-  const viewerRef = useRef(null);
-
-  // ── calcule la largeur réelle du viewer ────────────────────────────────────
-  useEffect(() => {
-    const updateWidth = () => {
-      if (viewerRef.current) {
-        const padding = window.innerWidth < 600 ? 32 : 56;
-        const w = Math.min(860, viewerRef.current.clientWidth - padding);
-        setContainerWidth(w > 100 ? w : 300);
-      } else {
-        const padding = window.innerWidth < 600 ? 32 : 56;
-        setContainerWidth(Math.min(860, window.innerWidth - padding));
-      }
-    };
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
-
-  // ── sync input page ────────────────────────────────────────────────────────
-  useEffect(() => {
-    setPageInputVal(String(pageNumber));
-  }, [pageNumber]);
-
-  // ── fetch TP ───────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchTPDetails = async () => {
       try {
@@ -581,41 +475,6 @@ const TPDetail = () => {
     };
     if (tpId) fetchTPDetails();
   }, [tpId]);
-
-  // ── helpers pagination ─────────────────────────────────────────────────────
-  const goToPrev = () => setPageNumber(p => Math.max(1, p - 1));
-  const goToNext = () => setPageNumber(p => Math.min(numPages ?? 1, p + 1));
-
-  const handlePageInputChange = (e) => setPageInputVal(e.target.value);
-
-  const handlePageInputBlur = () => {
-    const val = parseInt(pageInputVal, 10);
-    if (!isNaN(val) && val >= 1 && val <= (numPages ?? 1)) {
-      setPageNumber(val);
-    } else {
-      setPageInputVal(String(pageNumber));
-    }
-  };
-
-  const handlePageInputKeyDown = (e) => {
-    if (e.key === 'Enter') e.target.blur();
-  };
-
-  // ── fullscreen ─────────────────────────────────────────────────────────────
-  const handleFullscreen = () => {
-    const el = viewerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      el.requestFullscreen?.();
-    }
-  };
-
-  // ── PDF url ────────────────────────────────────────────────────────────────
-  const pdfUrl = tp?.file_path
-    ? `https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${tp.file_path}`
-    : null;
 
   /* ── loading ── */
   if (loading) return (
@@ -680,33 +539,9 @@ const TPDetail = () => {
 
             {/* center — visible tablet+ */}
             <div className="td-toolbar-center">
-              <button
-                className="td-page-btn"
-                onClick={goToPrev}
-                disabled={pageNumber <= 1}
-              >
-                <ChevronLeft size={14} />
-              </button>
-
-              <input
-                className="td-page-input"
-                type="number"
-                min={1}
-                max={numPages ?? 1}
-                value={pageInputVal}
-                onChange={handlePageInputChange}
-                onBlur={handlePageInputBlur}
-                onKeyDown={handlePageInputKeyDown}
-              />
-              <span className="td-page-label">/ {numPages ?? '—'}</span>
-
-              <button
-                className="td-page-btn"
-                onClick={goToNext}
-                disabled={!numPages || pageNumber >= numPages}
-              >
-                <ChevronRight size={14} />
-              </button>
+              <button className="td-page-btn"><ChevronLeft size={14} /></button>
+              <span className="td-page-label">Page 1 / 1</span>
+              <button className="td-page-btn"><ChevronRight size={14} /></button>
             </div>
 
             {/* right */}
@@ -728,11 +563,7 @@ const TPDetail = () => {
                   <Plus size={14} />
                 </button>
               </div>
-              <button
-                className="td-icon-btn"
-                aria-label="Plein écran"
-                onClick={handleFullscreen}
-              >
+              <button className="td-icon-btn" aria-label="Plein écran">
                 <Maximize2 size={16} />
               </button>
             </div>
@@ -740,60 +571,39 @@ const TPDetail = () => {
           </header>
 
           {/* ── VIEWER ── */}
-          <div className="td-viewer" ref={viewerRef}>
-            <div className="td-sheet">
-
-              {pdfUrl ? (
-                pdfError ? (
-                  <div className="td-pdf-error">
-                    <AlertCircle size={36} style={{ color: "var(--muted)" }} />
-                    <p>Impossible de charger le PDF.</p>
-                    <p style={{ fontSize: 12 }}>Vérifiez votre connexion ou contactez l'administrateur.</p>
-                  </div>
-                ) : (
-                  <Document
-                    file={pdfUrl}
-                    onLoadSuccess={({ numPages }) => {
-                      setNumPages(numPages);
-                      setPageNumber(1);
-                      setPdfError(false);
-                    }}
-                    onLoadError={(err) => {
-                      console.error("PDF load error:", err);
-                      setPdfError(true);
-                    }}
-                    loading={
-                      <div className="td-pdf-loader">
-                        <Loader2 size={36} style={{ color: "var(--orange)" }} className="td-spin" />
-                        <p>Chargement du document…</p>
-                      </div>
-                    }
-                  >
-                    <Page
-                      pageNumber={pageNumber}
-                      width={containerWidth * (zoom / 100)}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                      loading={
-                        <div className="td-pdf-loader">
-                          <Loader2 size={28} style={{ color: "var(--orange)" }} className="td-spin" />
-                        </div>
-                      }
-                    />
-                  </Document>
-                )
+          <div className="td-viewer">
+            <div
+              className="td-sheet"
+              style={{ transform: `scale(${zoom / 100})` }}
+            >
+              {tp.file_path ? (
+                <iframe
+                  src={`https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${tp.file_path}#toolbar=0`}                  
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: 600,
+                    display: "block",
+                    border: "none",
+                  }}
+                  title={tp.title}
+                />
               ) : (
-                /* ── fallback si pas de fichier ── */
                 <div className="td-fallback">
+
                   <span className="td-challenge-pill">
                     Challenge — {tp.difficulty || "Niveau 1"}
                   </span>
+
                   <h2 className="td-fallback-title">
                     Instructions&nbsp;: {tp.title}
                   </h2>
                   <p className="td-fallback-subtitle">TP-{tpNum} &bull; {tp.category}</p>
+
                   <hr className="td-fallback-divider" />
+
                   <p className="td-fallback-desc">{tp.description}</p>
+
                   <div className="td-objectives">
                     <div className="td-objectives-heading">Objectifs du TP</div>
                     <div className="td-obj-list">
@@ -807,35 +617,13 @@ const TPDetail = () => {
                       </div>
                     </div>
                   </div>
+
                 </div>
               )}
 
               <div className="td-watermark">CodeLink TP</div>
             </div>
           </div>
-
-          {/* ── PAGINATION MOBILE (visible seulement < 600px) ── */}
-          {numPages && numPages > 1 && (
-            <div className="td-mobile-nav">
-              <button
-                className="td-mobile-btn"
-                onClick={goToPrev}
-                disabled={pageNumber <= 1}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span className="td-mobile-label">
-                {pageNumber} / {numPages}
-              </span>
-              <button
-                className="td-mobile-btn"
-                onClick={goToNext}
-                disabled={pageNumber >= numPages}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
 
         </main>
       </div>

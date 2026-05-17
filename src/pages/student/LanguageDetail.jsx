@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronLeft, ChevronRight, Minus, Plus, Maximize2,
   Loader2, AlertCircle
@@ -9,9 +6,6 @@ import {
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from "../../components/layout/SidebarStudent";
 import API from "../../services/api";
-
-// ─── Worker PDF.js (obligatoire pour react-pdf) ───────────────────────────────
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 /* ─────────────────────────────────────────────
    SCOPED STYLES
@@ -93,11 +87,12 @@ const style = `
   }
   @media (min-width: 480px) { .ld-file-meta { display: block; } }
 
-  /* center — page nav */
+  /* center — page nav: hide on very small screens */
   .ld-toolbar-center {
-    display: flex;
+    display: none;
     align-items: center; gap: 4px; flex-shrink: 0;
   }
+  @media (min-width: 540px) { .ld-toolbar-center { display: flex; } }
 
   .ld-page-btn {
     width: 26px; height: 26px; border-radius: 8px; border: none;
@@ -105,23 +100,11 @@ const style = `
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .2s, color .2s;
   }
-  .ld-page-btn:hover:not(:disabled) { background: rgba(255,255,255,.14); color: var(--white); }
-  .ld-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
+  .ld-page-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
   .ld-page-label {
     font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
     color: var(--white); padding: 0 8px; letter-spacing: .06em; white-space: nowrap;
   }
-
-  /* page input direct */
-  .ld-page-input {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
-    color: var(--white); background: rgba(255,255,255,.1);
-    border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
-    width: 36px; text-align: center; padding: 2px 4px;
-    outline: none;
-  }
-  .ld-page-input:focus { border-color: var(--blue); }
 
   .ld-toolbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   @media (min-width: 640px) { .ld-toolbar-right { gap: 10px; } }
@@ -143,6 +126,7 @@ const style = `
     color: var(--white); min-width: 32px; text-align: center; letter-spacing: .04em;
   }
 
+  /* hide zoom on very small screens, show just essential */
   @media (max-width: 400px) { .ld-zoom { display: none; } }
 
   .ld-icon-btn {
@@ -153,6 +137,7 @@ const style = `
   }
   .ld-icon-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
 
+  /* hide fullscreen btn on small screens */
   @media (max-width: 480px) { .ld-icon-btn { display: none; } }
 
   .ld-dot {
@@ -182,72 +167,18 @@ const style = `
     box-shadow: 0 32px 80px rgba(13,27,62,.14), 0 2px 8px rgba(13,27,62,.08);
     border-radius: 4px;
     width: 100%; max-width: 860px;
+    min-height: 600px;
     position: relative;
+    transition: transform .3s, width .3s;
+    transform-origin: top center;
     overflow: hidden;
   }
+  @media (min-width: 640px) { .ld-sheet { min-height: 800px; } }
+  @media (min-width: 1024px) { .ld-sheet { min-height: 1100px; } }
 
   .ld-sheet::before {
     content: ''; display: block; height: 4px;
     background: linear-gradient(90deg, var(--blue), var(--orange));
-  }
-
-  /* react-pdf canvas responsive */
-  .ld-sheet .react-pdf__Document {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .ld-sheet .react-pdf__Page {
-    width: 100% !important;
-  }
-  .ld-sheet .react-pdf__Page canvas {
-    width: 100% !important;
-    height: auto !important;
-    display: block;
-  }
-
-  /* ── PDF loading inside sheet ── */
-  .ld-pdf-loader {
-    display: flex; align-items: center; justify-content: center;
-    padding: 80px 24px; flex-direction: column; gap: 16px;
-  }
-  .ld-pdf-loader p {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    color: var(--muted); letter-spacing: .08em;
-  }
-
-  /* ── PDF error inside sheet ── */
-  .ld-pdf-error {
-    display: flex; align-items: center; justify-content: center;
-    padding: 80px 24px; flex-direction: column; gap: 12px; text-align: center;
-  }
-  .ld-pdf-error p {
-    font-family: 'DM Sans', sans-serif; font-size: 14px;
-    color: var(--muted);
-  }
-
-  /* ── mobile bottom pagination ── */
-  .ld-mobile-nav {
-    display: flex; align-items: center; justify-content: center;
-    gap: 12px; padding: 12px 16px;
-    background: var(--white);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  @media (min-width: 540px) { .ld-mobile-nav { display: none; } }
-
-  .ld-mobile-btn {
-    width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--border);
-    background: var(--white); color: var(--ink);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all .2s;
-  }
-  .ld-mobile-btn:hover:not(:disabled) { background: var(--bg); border-color: var(--blue); color: var(--blue); }
-  .ld-mobile-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .ld-mobile-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
-    color: var(--ink); letter-spacing: .06em;
   }
 
   /* ── fallback content inside sheet ── */
@@ -308,11 +239,6 @@ const style = `
   /* spin keyframe */
   @keyframes ld-spin { to { transform: rotate(360deg); } }
   .ld-spin { animation: ld-spin 1s linear infinite; }
-
-  /* hide toolbar center nav on mobile, show mobile bottom nav instead */
-  @media (max-width: 539px) {
-    .ld-toolbar-center { display: none; }
-  }
 `;
 
 /* ─────────────────────────────────────────────
@@ -328,88 +254,19 @@ const LanguageDetail = () => {
   const [loading, setLoading] = useState(true);
   const [zoom, setZoom] = useState(100);
 
-  // ── états PDF ──────────────────────────────────────────────────────────────
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [pageInputVal, setPageInputVal] = useState('1');
-  const [containerWidth, setContainerWidth] = useState(800);
-  const [pdfError, setPdfError] = useState(false);
-
-  const viewerRef = useRef(null);
-
-  // ── calcule la largeur réelle du viewer pour adapter le rendu PDF ──────────
-  useEffect(() => {
-    const updateWidth = () => {
-      if (viewerRef.current) {
-        const padding = window.innerWidth < 640 ? 32 : 64;
-        const w = Math.min(860, viewerRef.current.clientWidth - padding);
-        setContainerWidth(w > 100 ? w : 300);
-      } else {
-        const padding = window.innerWidth < 640 ? 32 : 64;
-        setContainerWidth(Math.min(860, window.innerWidth - padding));
-      }
-    };
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
-
-  // ── sync input page ────────────────────────────────────────────────────────
-  useEffect(() => {
-    setPageInputVal(String(pageNumber));
-  }, [pageNumber]);
-
-  // ── fetch course ───────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchCourseDetails = async () => {
       try {
         const res = await API.get(`/courses/${courseId}`);
         setCourse(res.data);
       } catch (err) {
-        console.error("Erreur de chargement du cours:", err);
+        console.error("Erreur de chargement du PDF:", err);
       } finally {
         setLoading(false);
       }
     };
     if (courseId) fetchCourseDetails();
   }, [courseId]);
-
-  // ── helpers pagination ─────────────────────────────────────────────────────
-  const goToPrev = () => setPageNumber(p => Math.max(1, p - 1));
-  const goToNext = () => setPageNumber(p => Math.min(numPages ?? 1, p + 1));
-
-  const handlePageInputChange = (e) => {
-    setPageInputVal(e.target.value);
-  };
-
-  const handlePageInputBlur = () => {
-    const val = parseInt(pageInputVal, 10);
-    if (!isNaN(val) && val >= 1 && val <= (numPages ?? 1)) {
-      setPageNumber(val);
-    } else {
-      setPageInputVal(String(pageNumber));
-    }
-  };
-
-  const handlePageInputKeyDown = (e) => {
-    if (e.key === 'Enter') e.target.blur();
-  };
-
-  // ── fullscreen ─────────────────────────────────────────────────────────────
-  const handleFullscreen = () => {
-    const el = viewerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      el.requestFullscreen?.();
-    }
-  };
-
-  // ── PDF url ────────────────────────────────────────────────────────────────
-  const pdfUrl = course?.file_path
-    ? `https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}`
-    : null;
 
   /* ── loading ── */
   if (loading) return (
@@ -437,6 +294,7 @@ const LanguageDetail = () => {
     <>
       <style>{style}</style>
 
+      {/* pt-14 offsets the mobile Sidebar top bar */}
       <div
         className="ld-root pt-14 lg:pt-0"
         style={{ display: "flex", height: "100vh", overflow: "hidden" }}
@@ -470,35 +328,11 @@ const LanguageDetail = () => {
               </div>
             </div>
 
-            {/* center — page nav (caché sur mobile < 540px) */}
+            {/* center — page nav (hidden on mobile) */}
             <div className="ld-toolbar-center">
-              <button
-                className="ld-page-btn"
-                onClick={goToPrev}
-                disabled={pageNumber <= 1}
-              >
-                <ChevronLeft size={13} />
-              </button>
-
-              <input
-                className="ld-page-input"
-                type="number"
-                min={1}
-                max={numPages ?? 1}
-                value={pageInputVal}
-                onChange={handlePageInputChange}
-                onBlur={handlePageInputBlur}
-                onKeyDown={handlePageInputKeyDown}
-              />
-              <span className="ld-page-label">/ {numPages ?? '—'}</span>
-
-              <button
-                className="ld-page-btn"
-                onClick={goToNext}
-                disabled={!numPages || pageNumber >= numPages}
-              >
-                <ChevronRight size={13} />
-              </button>
+              <button className="ld-page-btn"><ChevronLeft size={13} /></button>
+              <span className="ld-page-label">Page 1 / 1</span>
+              <button className="ld-page-btn"><ChevronRight size={13} /></button>
             </div>
 
             {/* right — zoom + fullscreen */}
@@ -518,7 +352,7 @@ const LanguageDetail = () => {
                   <Plus size={13} />
                 </button>
               </div>
-              <button className="ld-icon-btn" onClick={handleFullscreen}>
+              <button className="ld-icon-btn">
                 <Maximize2 size={15} />
               </button>
             </div>
@@ -526,59 +360,32 @@ const LanguageDetail = () => {
           </header>
 
           {/* ── VIEWER ── */}
-          <div className="ld-viewer" ref={viewerRef}>
-            <div className="ld-sheet">
-
-              {pdfUrl ? (
-                pdfError ? (
-                  /* ── erreur chargement PDF ── */
-                  <div className="ld-pdf-error">
-                    <AlertCircle size={36} style={{ color: "var(--muted)" }} />
-                    <p>Impossible de charger le PDF.</p>
-                    <p style={{ fontSize: 12 }}>Vérifiez votre connexion ou contactez l'administrateur.</p>
-                  </div>
-                ) : (
-                  /* ── react-pdf ── */
-                  <Document
-                    file={pdfUrl}
-                    onLoadSuccess={({ numPages }) => {
-                      setNumPages(numPages);
-                      setPageNumber(1);
-                      setPdfError(false);
-                    }}
-                    onLoadError={(err) => {
-                      console.error("PDF load error:", err);
-                      setPdfError(true);
-                    }}
-                    loading={
-                      <div className="ld-pdf-loader">
-                        <Loader2 size={36} style={{ color: "var(--blue)" }} className="ld-spin" />
-                        <p>Chargement du document…</p>
-                      </div>
-                    }
-                  >
-                    <Page
-                      pageNumber={pageNumber}
-                      width={containerWidth * (zoom / 100)}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                      loading={
-                        <div className="ld-pdf-loader">
-                          <Loader2 size={28} style={{ color: "var(--blue)" }} className="ld-spin" />
-                        </div>
-                      }
-                    />
-                  </Document>
-                )
+          <div className="ld-viewer">
+            <div
+              className="ld-sheet"
+              style={{
+                transform: `scale(${zoom / 100})`,
+                width: `min(860px, ${zoom}%)`,
+              }}
+            >
+              {course.file_path ? (
+                <iframe
+                  src={`https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}#toolbar=0`}                  
+                  style={{ width: "100%", height: "100%", minHeight: 600, display: "block", border: "none" }}
+                  title={course.title}
+                />
               ) : (
-                /* ── fallback si pas de fichier ── */
                 <div className="ld-fallback">
                   <span className="ld-module-pill">
                     Module {course.module_number || "01"}
                   </span>
+
                   <h2 className="ld-fallback-title">{course.title}</h2>
+
                   <hr className="ld-fallback-divider" />
+
                   <p className="ld-fallback-desc">{course.description}</p>
+
                   <div className="ld-fallback-placeholder">
                     <p>Le contenu détaillé de ce module est en cours de génération…</p>
                   </div>
@@ -588,29 +395,6 @@ const LanguageDetail = () => {
               <div className="ld-watermark">CodeLink Secure</div>
             </div>
           </div>
-
-          {/* ── PAGINATION MOBILE (visible seulement < 540px) ── */}
-          {numPages && numPages > 1 && (
-            <div className="ld-mobile-nav">
-              <button
-                className="ld-mobile-btn"
-                onClick={goToPrev}
-                disabled={pageNumber <= 1}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span className="ld-mobile-label">
-                {pageNumber} / {numPages}
-              </span>
-              <button
-                className="ld-mobile-btn"
-                onClick={goToNext}
-                disabled={pageNumber >= numPages}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
 
         </main>
       </div>
