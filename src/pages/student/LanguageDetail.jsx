@@ -370,7 +370,7 @@ const LanguageDetail = () => {
             >
               {course.file_path ? (
                 <iframe
-                  src={`codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net`}
+                  src={`https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}#toolbar=0`}                  
                   style={{ width: "100%", height: "100%", minHeight: 600, display: "block", border: "none" }}
                   title={course.title}
                 />

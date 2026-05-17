@@ -578,7 +578,7 @@ const TPDetail = () => {
             >
               {tp.file_path ? (
                 <iframe
-                  src={`codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net`}
+                  src={`https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${tp.file_path}#toolbar=0`}                  
                   style={{
                     width: "100%",
                     height: "100%",
