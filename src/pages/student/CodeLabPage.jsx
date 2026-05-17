@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   RotateCcw, Play, Globe, Loader2,
   FileCode, Hash, Braces, Terminal, Code2,
-  ChevronRight, Zap, CheckCircle2, Circle
+  ChevronRight, Zap, CheckCircle2, Circle,
+  Eye, PenLine,
 } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -28,7 +29,8 @@ const CodeLabPage = () => {
   const [activeTab, setActiveTab]   = useState('index.html');
   const [srcDoc,    setSrcDoc]      = useState('');
   const [isRunning, setIsRunning]   = useState(false);
-
+  // Mobile: 'editor' | 'preview'
+  const [mobileView, setMobileView] = useState('editor');
 
   const updateOutput = () => {
     setIsRunning(true);
@@ -40,7 +42,12 @@ const CodeLabPage = () => {
           <script>${files['script.js']}<\/script>
         </body>
       </html>`;
-    setTimeout(() => { setSrcDoc(combined); setIsRunning(false); }, 500);
+    setTimeout(() => {
+      setSrcDoc(combined);
+      setIsRunning(false);
+      // On mobile, auto-switch to preview after running
+      setMobileView('preview');
+    }, 500);
   };
 
   useEffect(() => { updateOutput(); }, []);
@@ -54,7 +61,6 @@ const CodeLabPage = () => {
     return languages.javascript;
   };
 
-  /* line count for gutter */
   const lineCount = (files[activeTab] || '').split('\n').length;
 
   return (
@@ -95,9 +101,9 @@ const CodeLabPage = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 20px;
+          padding: 0 12px;
           flex-shrink: 0;
-          gap: 12px;
+          gap: 8px;
         }
 
         .cl-brand {
@@ -109,17 +115,27 @@ const CodeLabPage = () => {
           letter-spacing: 0.05em;
           color: var(--text-bright);
           white-space: nowrap;
+          flex-shrink: 0;
         }
-        .cl-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+        .cl-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
 
         /* tabs */
-        .cl-tabs { display: flex; align-items: center; gap: 4px; }
+        .cl-tabs {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          flex: 1;
+          justify-content: center;
+        }
+        .cl-tabs::-webkit-scrollbar { display: none; }
 
         .cl-tab {
-          display: flex; align-items: center; gap: 6px;
-          padding: 5px 14px;
+          display: flex; align-items: center; gap: 5px;
+          padding: 5px 10px;
           border-radius: 6px;
-          font-size: 11.5px;
+          font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.02em;
           border: 1px solid transparent;
@@ -128,6 +144,8 @@ const CodeLabPage = () => {
           background: none;
           color: var(--text-dim);
           font-family: 'Sora', sans-serif;
+          white-space: nowrap;
+          flex-shrink: 0;
         }
         .cl-tab:hover { color: var(--text-bright); background: rgba(255,255,255,.06); }
         .cl-tab.active {
@@ -138,20 +156,27 @@ const CodeLabPage = () => {
         .cl-tab.active svg { color: var(--blue); }
         .cl-tab svg { flex-shrink: 0; }
 
+        /* hide tab labels on very small screens */
+        @media (max-width: 400px) {
+          .cl-tab-label { display: none; }
+          .cl-tab { padding: 5px 8px; }
+        }
+
         /* actions */
-        .cl-actions { display: flex; align-items: center; gap: 8px; }
+        .cl-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
         .cl-btn {
-          display: flex; align-items: center; gap: 6px;
-          padding: 6px 14px;
+          display: flex; align-items: center; gap: 5px;
+          padding: 6px 10px;
           border-radius: 7px;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 800;
           letter-spacing: 0.07em;
           border: none;
           cursor: pointer;
           transition: all .18s ease;
           font-family: 'Sora', sans-serif;
+          white-space: nowrap;
         }
 
         .cl-btn-ghost {
@@ -161,11 +186,17 @@ const CodeLabPage = () => {
         }
         .cl-btn-ghost:hover { color: #ff6b6b; border-color: rgba(229,82,45,.4); background: rgba(229,82,45,.08); }
 
+        /* hide RESET label on small screens */
+        @media (max-width: 480px) {
+          .cl-btn-ghost .cl-btn-label { display: none; }
+          .cl-btn-ghost { padding: 6px 8px; }
+        }
+
         .cl-btn-run {
           background: var(--orange);
           color: #fff;
           box-shadow: 0 0 16px rgba(229,82,45,.4);
-          padding: 6px 20px;
+          padding: 6px 14px;
         }
         .cl-btn-run:hover:not(:disabled) {
           background: var(--orange-dark);
@@ -176,15 +207,74 @@ const CodeLabPage = () => {
         .cl-btn-run:disabled { opacity: .55; cursor: not-allowed; }
 
         /* ── IDE BODY ─────────────────────────────────────────── */
-        .cl-body { flex: 1; display: flex; overflow: hidden; }
+        .cl-body {
+          flex: 1;
+          display: flex;
+          overflow: hidden;
+        }
 
         /* editor pane */
         .cl-editor-pane {
-          width: 50%;
           display: flex;
           flex-direction: column;
           border-right: 1px solid var(--editor-border);
           background: var(--editor-bg);
+          /* Desktop: side by side */
+          width: 50%;
+        }
+
+        /* preview pane */
+        .cl-preview-pane {
+          display: flex;
+          flex-direction: column;
+          background: #f0f4ff;
+          width: 50%;
+        }
+
+        /* ── MOBILE: stack vertically ── */
+        @media (max-width: 767px) {
+          .cl-body { flex-direction: column; }
+          .cl-editor-pane { width: 100%; border-right: none; border-bottom: 1px solid var(--editor-border); }
+          .cl-preview-pane { width: 100%; }
+
+          /* show/hide based on mobileView state via data attribute */
+          .cl-body[data-mobile-view="editor"] .cl-editor-pane  { flex: 1; display: flex; }
+          .cl-body[data-mobile-view="editor"] .cl-preview-pane { display: none; }
+          .cl-body[data-mobile-view="preview"] .cl-editor-pane  { display: none; }
+          .cl-body[data-mobile-view="preview"] .cl-preview-pane { flex: 1; display: flex; }
+        }
+
+        /* ── Mobile view switcher bar ── */
+        .cl-view-switcher {
+          display: none;
+          background: var(--editor-panel);
+          border-bottom: 1px solid var(--editor-border);
+          flex-shrink: 0;
+        }
+        @media (max-width: 767px) {
+          .cl-view-switcher { display: flex; }
+        }
+        .cl-view-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px;
+          font-size: 11px;
+          font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          letter-spacing: 0.05em;
+          border: none;
+          cursor: pointer;
+          transition: all .18s;
+          background: transparent;
+          color: var(--text-dim);
+        }
+        .cl-view-btn.active {
+          color: var(--text-bright);
+          background: rgba(23,84,190,.15);
+          border-bottom: 2px solid var(--orange);
         }
 
         .cl-pane-header {
@@ -192,7 +282,7 @@ const CodeLabPage = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 16px;
+          padding: 0 12px;
           background: var(--editor-panel);
           border-bottom: 1px solid var(--editor-border);
           flex-shrink: 0;
@@ -210,18 +300,15 @@ const CodeLabPage = () => {
         .cl-pane-label svg { color: var(--blue); opacity: .7; }
 
         .cl-traffic { display: flex; gap: 5px; }
-        .cl-dot {
-          width: 9px; height: 9px; border-radius: 50%;
-        }
+        .cl-dot { width: 9px; height: 9px; border-radius: 50%; }
         .cl-dot-r { background: #ff5f57; }
         .cl-dot-y { background: #febc2e; }
         .cl-dot-g { background: #28c840; }
 
-        /* gutter + editor row */
         .cl-editor-scroll { flex: 1; display: flex; overflow: auto; }
 
         .cl-gutter {
-          width: 40px;
+          width: 36px;
           flex-shrink: 0;
           padding: 4px 0;
           background: var(--editor-panel);
@@ -240,19 +327,7 @@ const CodeLabPage = () => {
           padding: 1px 0;
         }
 
-        .cl-code-wrap {
-          flex: 1;
-          padding: 4px 0;
-          min-width: 0;
-        }
-
-        /* preview pane */
-        .cl-preview-pane {
-          width: 50%;
-          display: flex;
-          flex-direction: column;
-          background: #f0f4ff;
-        }
+        .cl-code-wrap { flex: 1; padding: 4px 0; min-width: 0; }
 
         .cl-preview-bar {
           height: 32px;
@@ -260,14 +335,14 @@ const CodeLabPage = () => {
           border-bottom: 1px solid #dce6f5;
           display: flex;
           align-items: center;
-          padding: 0 16px;
+          padding: 0 12px;
           gap: 8px;
           flex-shrink: 0;
         }
 
         .cl-url-pill {
           flex: 1;
-          max-width: 340px;
+          max-width: 300px;
           height: 20px;
           background: #f0f4ff;
           border: 1px solid #d0dcf0;
@@ -285,7 +360,7 @@ const CodeLabPage = () => {
 
         .cl-preview-content {
           flex: 1;
-          padding: 20px;
+          padding: 12px;
           overflow: hidden;
         }
 
@@ -293,7 +368,7 @@ const CodeLabPage = () => {
           width: 100%;
           height: 100%;
           background: #fff;
-          border-radius: 16px;
+          border-radius: 12px;
           box-shadow: 0 8px 32px rgba(23,84,190,.12), 0 1px 4px rgba(23,84,190,.08);
           border: 1px solid #dce6f5;
           overflow: hidden;
@@ -312,7 +387,6 @@ const CodeLabPage = () => {
         .cl-spinner { color: var(--orange); animation: spin .8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* scrollbar */
         .cl-editor-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .cl-editor-scroll::-webkit-scrollbar-track { background: transparent; }
         .cl-editor-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
@@ -326,34 +400,33 @@ const CodeLabPage = () => {
 
           {/* TOPBAR */}
           <header className="cl-topbar">
-            {/* Brand */}
             <div className="cl-brand">
               <div className="cl-brand-dot" />
-              CodeLink<span style={{ color: ORANGE }}>.</span>lab
+              <span className="hidden sm:inline">CodeLink<span style={{ color: ORANGE }}>.</span>lab</span>
             </div>
 
-            {/* Tabs */}
+            {/* File tabs */}
             <div className="cl-tabs">
               <button
                 className={`cl-tab${activeTab === 'index.html' ? ' active' : ''}`}
                 onClick={() => setActiveTab('index.html')}
               >
                 <FileCode size={12} />
-                index.html
+                <span className="cl-tab-label">index.html</span>
               </button>
               <button
                 className={`cl-tab${activeTab === 'style.css' ? ' active' : ''}`}
                 onClick={() => setActiveTab('style.css')}
               >
                 <Hash size={12} />
-                style.css
+                <span className="cl-tab-label">style.css</span>
               </button>
               <button
                 className={`cl-tab${activeTab === 'script.js' ? ' active' : ''}`}
                 onClick={() => setActiveTab('script.js')}
               >
                 <Braces size={12} />
-                script.js
+                <span className="cl-tab-label">script.js</span>
               </button>
             </div>
 
@@ -364,7 +437,7 @@ const CodeLabPage = () => {
                 onClick={() => setFiles({ 'index.html': '', 'style.css': '', 'script.js': '' })}
               >
                 <RotateCcw size={12} />
-                RESET
+                <span className="cl-btn-label">RESET</span>
               </button>
 
               <button
@@ -373,15 +446,31 @@ const CodeLabPage = () => {
                 disabled={isRunning}
               >
                 {isRunning
-                  ? <><Loader2 size={12} className="cl-spinner" style={{ animation: 'spin .7s linear infinite' }} /> COMPILATION</>
-                  : <><Zap size={12} /> EXÉCUTER</>
+                  ? <><Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> <span className="hidden sm:inline">COMPILATION</span></>
+                  : <><Zap size={12} /> <span className="hidden sm:inline">EXÉCUTER</span></>
                 }
               </button>
             </div>
           </header>
 
+          {/* Mobile view switcher */}
+          <div className="cl-view-switcher">
+            <button
+              className={`cl-view-btn${mobileView === 'editor' ? ' active' : ''}`}
+              onClick={() => setMobileView('editor')}
+            >
+              <PenLine size={13} /> Éditeur
+            </button>
+            <button
+              className={`cl-view-btn${mobileView === 'preview' ? ' active' : ''}`}
+              onClick={() => setMobileView('preview')}
+            >
+              <Eye size={13} /> Aperçu
+            </button>
+          </div>
+
           {/* IDE BODY */}
-          <div className="cl-body">
+          <div className="cl-body" data-mobile-view={mobileView}>
 
             {/* EDITOR */}
             <div className="cl-editor-pane">
@@ -398,14 +487,11 @@ const CodeLabPage = () => {
               </div>
 
               <div className="cl-editor-scroll">
-                {/* Gutter */}
                 <div className="cl-gutter">
                   {Array.from({ length: lineCount }, (_, i) => (
                     <span key={i}>{i + 1}</span>
                   ))}
                 </div>
-
-                {/* Code editor */}
                 <div className="cl-code-wrap">
                   <Editor
                     value={files[activeTab]}
@@ -427,7 +513,6 @@ const CodeLabPage = () => {
 
             {/* PREVIEW */}
             <div className="cl-preview-pane">
-              {/* Browser bar */}
               <div className="cl-preview-bar">
                 <Globe size={11} style={{ color: BLUE, opacity: .6 }} />
                 <div className="cl-url-pill">
@@ -440,7 +525,7 @@ const CodeLabPage = () => {
                 <div className="cl-preview-card">
                   {isRunning && (
                     <div className="cl-overlay">
-                      <Loader2 size={30} className="cl-spinner" style={{ color: ORANGE, animation: 'spin .7s linear infinite' }} />
+                      <Loader2 size={30} style={{ color: ORANGE, animation: 'spin .7s linear infinite' }} />
                     </div>
                   )}
                   <iframe

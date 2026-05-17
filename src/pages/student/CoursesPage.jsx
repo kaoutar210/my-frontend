@@ -35,11 +35,18 @@ const CSS = `
 
   /* ── Header ─────────────────────────────────────────────────── */
   .cp-header {
-    padding: 56px 48px 40px;
+    padding: 32px 20px 28px;
     border-bottom: 1px solid var(--rule);
     position: relative;
     overflow: hidden;
   }
+  @media (min-width: 640px) {
+    .cp-header { padding: 44px 32px 32px; }
+  }
+  @media (min-width: 1024px) {
+    .cp-header { padding: 56px 48px 40px; }
+  }
+
   .cp-header::before {
     content: '';
     position: absolute;
@@ -62,37 +69,42 @@ const CSS = `
     text-transform: uppercase;
     padding: 5px 14px;
     border-radius: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .cp-title {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-size: clamp(1.6rem, 5vw, 2.8rem);
     font-weight: 800;
     color: var(--ink);
-    line-height: 1.1;
+    line-height: 1.15;
     letter-spacing: -.02em;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .cp-sub {
     color: var(--muted);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 400;
     max-width: 480px;
     line-height: 1.65;
+  }
+  @media (min-width: 640px) {
+    .cp-sub { font-size: 15px; }
   }
 
   /* ── Stats strip ─────────────────────────────────────────────── */
   .cp-stats-strip {
     display: flex;
     align-items: center;
-    gap: 32px;
-    margin-top: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
   }
+  @media (min-width: 640px) {
+    .cp-stats-strip { gap: 32px; margin-top: 32px; }
+  }
+
   .cp-stat {
     display: flex;
     align-items: center;
@@ -107,10 +119,26 @@ const CSS = `
 
   /* ── Grid ───────────────────────────────────────────────────── */
   .cp-grid {
-    padding: 40px 48px 80px;
+    padding: 24px 16px 60px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 480px) {
+    .cp-grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+      padding: 28px 24px 60px;
+    }
+  }
+  @media (min-width: 640px) {
+    .cp-grid { padding: 32px 32px 80px; gap: 20px; }
+  }
+  @media (min-width: 1024px) {
+    .cp-grid {
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      padding: 40px 48px 80px;
+    }
   }
 
   /* ── Card ───────────────────────────────────────────────────── */
@@ -128,8 +156,11 @@ const CSS = `
     box-shadow: 0 20px 48px rgba(13,27,62,.09);
     border-color: var(--blue-mid);
   }
+  /* Disable hover lift on touch devices */
+  @media (hover: none) {
+    .cp-card:hover { transform: none; }
+  }
 
-  /* top color strip */
   .cp-card-strip {
     height: 3px;
     width: 0;
@@ -138,18 +169,23 @@ const CSS = `
   }
   .cp-card:hover .cp-card-strip { width: 100%; }
 
-  .cp-card-body { padding: 28px 28px 24px; }
+  .cp-card-body { padding: 20px 20px 18px; }
+  @media (min-width: 640px) {
+    .cp-card-body { padding: 28px 28px 24px; }
+  }
 
-  /* icon + level row */
   .cp-card-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
+  }
+  @media (min-width: 640px) {
+    .cp-card-top { margin-bottom: 24px; }
   }
 
   .cp-icon-wrap {
-    width: 52px; height: 52px;
+    width: 46px; height: 46px;
     background: var(--blue-soft);
     border: 1px solid var(--blue-mid);
     border-radius: 14px;
@@ -157,6 +193,10 @@ const CSS = `
     align-items: center;
     justify-content: center;
     transition: background .25s, border-color .25s;
+    flex-shrink: 0;
+  }
+  @media (min-width: 640px) {
+    .cp-icon-wrap { width: 52px; height: 52px; }
   }
   .cp-card:hover .cp-icon-wrap {
     background: var(--blue);
@@ -173,11 +213,11 @@ const CSS = `
     color: var(--muted);
     background: #f7f8fb;
     border: 1px solid var(--rule);
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
+    white-space: nowrap;
   }
 
-  /* text */
   .cp-card-subtitle {
     font-size: 10px;
     font-weight: 600;
@@ -189,30 +229,38 @@ const CSS = `
 
   .cp-card-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--ink);
     line-height: 1.2;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     transition: color .2s;
+  }
+  @media (min-width: 640px) {
+    .cp-card-title { font-size: 1.35rem; }
   }
   .cp-card:hover .cp-card-title { color: var(--blue); }
 
   .cp-card-desc {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--muted);
     line-height: 1.6;
     font-weight: 400;
   }
+  @media (min-width: 640px) {
+    .cp-card-desc { font-size: 13.5px; }
+  }
 
-  /* footer */
   .cp-card-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 22px;
-    padding-top: 18px;
+    margin-top: 18px;
+    padding-top: 14px;
     border-top: 1px solid var(--rule);
+  }
+  @media (min-width: 640px) {
+    .cp-card-footer { margin-top: 22px; padding-top: 18px; }
   }
 
   .cp-card-stats {
@@ -231,6 +279,7 @@ const CSS = `
     color: var(--ink);
     letter-spacing: .02em;
     transition: gap .2s, color .2s;
+    white-space: nowrap;
   }
   .cp-card:hover .cp-card-cta {
     gap: 10px;
@@ -281,7 +330,8 @@ const CoursesPage = () => {
   return (
     <>
       <style>{CSS}</style>
-      <div className="cp-root flex min-h-screen bg-white text-slate-700">
+      {/* pt-14 offsets the mobile top bar from Sidebar */}
+      <div className="cp-root flex min-h-screen bg-white text-slate-700 pt-14 lg:pt-0">
         <Sidebar
           brandName="Codelink Notebook"
           onLogout={() => {
@@ -312,8 +362,6 @@ const CoursesPage = () => {
                 <BookOpen size={13} />
                 <strong>{languages.length}</strong>&nbsp;langages disponibles
               </div>
-              
-              
             </div>
           </header>
 
@@ -352,7 +400,7 @@ const LanguageCard = ({ title, subtitle, description, iconName, stats, level, on
 
         <div className="cp-card-top">
           <div className="cp-icon-wrap">
-            <IconComponent size={22} />
+            <IconComponent size={20} />
           </div>
           <span className="cp-level-pill">{level}</span>
         </div>

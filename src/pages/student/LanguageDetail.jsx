@@ -36,7 +36,7 @@ const style = `
   /* ── error screen ── */
   .ld-error {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100vh; background: var(--bg); gap: 12px;
+    height: 100vh; background: var(--bg); gap: 12px; padding: 24px; text-align: center;
   }
   .ld-error svg { color: var(--muted); }
   .ld-error p { font-weight: 500; color: var(--muted); font-size: 15px; }
@@ -50,13 +50,21 @@ const style = `
   .ld-toolbar {
     height: 56px; background: var(--ink); border-bottom: 2px solid var(--blue);
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; flex-shrink: 0; z-index: 10;
+    padding: 0 12px; flex-shrink: 0; z-index: 10; gap: 8px;
+  }
+  @media (min-width: 640px) {
+    .ld-toolbar { padding: 0 20px; gap: 12px; }
+  }
+  @media (min-width: 1024px) {
+    .ld-toolbar { padding: 0 24px; gap: 16px; }
   }
 
-  .ld-toolbar-left { display: flex; align-items: center; gap: 16px; }
+  .ld-toolbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+  @media (min-width: 640px) { .ld-toolbar-left { gap: 12px; } }
+  @media (min-width: 1024px) { .ld-toolbar-left { gap: 16px; } }
 
   .ld-back-btn {
-    width: 34px; height: 34px; border-radius: 10px;
+    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
     cursor: pointer; transition: background .2s; color: var(--white);
@@ -64,36 +72,49 @@ const style = `
   .ld-back-btn:hover { background: rgba(255,255,255,.16); }
 
   .ld-file-name {
-    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 14px;
-    color: var(--white); letter-spacing: -.01em; max-width: 380px;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px;
+    color: var(--white); letter-spacing: -.01em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 140px;
   }
+  @media (min-width: 480px) { .ld-file-name { max-width: 220px; font-size: 14px; } }
+  @media (min-width: 768px) { .ld-file-name { max-width: 340px; } }
+
   .ld-file-meta {
     font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 9px;
     letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
-    margin-top: 2px;
+    margin-top: 2px; display: none;
   }
+  @media (min-width: 480px) { .ld-file-meta { display: block; } }
 
-  .ld-toolbar-center { display: flex; align-items: center; gap: 4px; }
+  /* center — page nav: hide on very small screens */
+  .ld-toolbar-center {
+    display: none;
+    align-items: center; gap: 4px; flex-shrink: 0;
+  }
+  @media (min-width: 540px) { .ld-toolbar-center { display: flex; } }
+
   .ld-page-btn {
-    width: 28px; height: 28px; border-radius: 8px; border: none;
+    width: 26px; height: 26px; border-radius: 8px; border: none;
     background: rgba(255,255,255,.07); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .2s, color .2s;
   }
   .ld-page-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
   .ld-page-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
-    color: var(--white); padding: 0 12px; letter-spacing: .06em;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+    color: var(--white); padding: 0 8px; letter-spacing: .06em; white-space: nowrap;
   }
 
-  .ld-toolbar-right { display: flex; align-items: center; gap: 16px; }
+  .ld-toolbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  @media (min-width: 640px) { .ld-toolbar-right { gap: 10px; } }
+  @media (min-width: 1024px) { .ld-toolbar-right { gap: 16px; } }
 
   /* zoom control */
   .ld-zoom {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 6px;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-    border-radius: 10px; padding: 5px 12px;
+    border-radius: 10px; padding: 4px 10px;
   }
   .ld-zoom-btn {
     color: var(--muted); cursor: pointer; transition: color .2s;
@@ -101,23 +122,30 @@ const style = `
   }
   .ld-zoom-btn:hover { color: var(--white); }
   .ld-zoom-val {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
-    color: var(--white); min-width: 36px; text-align: center; letter-spacing: .04em;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+    color: var(--white); min-width: 32px; text-align: center; letter-spacing: .04em;
   }
+
+  /* hide zoom on very small screens, show just essential */
+  @media (max-width: 400px) { .ld-zoom { display: none; } }
+
   .ld-icon-btn {
-    width: 32px; height: 32px; border-radius: 10px; border: none;
+    width: 30px; height: 30px; border-radius: 10px; border: none;
     background: rgba(255,255,255,.07); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .2s, color .2s;
   }
   .ld-icon-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
 
-  /* accent dot on toolbar */
+  /* hide fullscreen btn on small screens */
+  @media (max-width: 480px) { .ld-icon-btn { display: none; } }
+
   .ld-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: linear-gradient(135deg, var(--blue), var(--orange));
-    flex-shrink: 0;
+    flex-shrink: 0; display: none;
   }
+  @media (min-width: 640px) { .ld-dot { display: block; } }
 
   /* ── viewer area ── */
   .ld-viewer {
@@ -126,10 +154,12 @@ const style = `
       radial-gradient(ellipse at 20% 50%, rgba(23,84,190,.06) 0%, transparent 60%),
       repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 40px),
       var(--bg);
-    padding: 40px 24px;
+    padding: 16px 8px;
     display: flex; justify-content: center;
     align-items: flex-start;
   }
+  @media (min-width: 640px) { .ld-viewer { padding: 24px 16px; } }
+  @media (min-width: 1024px) { .ld-viewer { padding: 40px 24px; } }
 
   /* ── PDF sheet ── */
   .ld-sheet {
@@ -137,21 +167,24 @@ const style = `
     box-shadow: 0 32px 80px rgba(13,27,62,.14), 0 2px 8px rgba(13,27,62,.08);
     border-radius: 4px;
     width: 100%; max-width: 860px;
-    min-height: 1100px;
+    min-height: 600px;
     position: relative;
     transition: transform .3s, width .3s;
     transform-origin: top center;
     overflow: hidden;
   }
+  @media (min-width: 640px) { .ld-sheet { min-height: 800px; } }
+  @media (min-width: 1024px) { .ld-sheet { min-height: 1100px; } }
 
-  /* top stripe */
   .ld-sheet::before {
     content: ''; display: block; height: 4px;
     background: linear-gradient(90deg, var(--blue), var(--orange));
   }
 
   /* ── fallback content inside sheet ── */
-  .ld-fallback { padding: 64px 72px; }
+  .ld-fallback { padding: 32px 24px; }
+  @media (min-width: 640px) { .ld-fallback { padding: 48px 48px; } }
+  @media (min-width: 1024px) { .ld-fallback { padding: 64px 72px; } }
 
   .ld-module-pill {
     display: inline-flex; align-items: center;
@@ -159,31 +192,35 @@ const style = `
     letter-spacing: .16em; text-transform: uppercase;
     padding: 5px 14px; border-radius: 999px;
     background: linear-gradient(135deg, var(--blue), rgba(23,84,190,.7));
-    color: var(--white); margin-bottom: 32px;
+    color: var(--white); margin-bottom: 24px;
   }
+  @media (min-width: 640px) { .ld-module-pill { margin-bottom: 32px; } }
 
   .ld-fallback-title {
     font-family: 'Playfair Display', serif; font-weight: 800;
-    font-size: clamp(2rem, 4vw, 3rem); color: var(--ink);
-    line-height: 1.1; letter-spacing: -.02em; margin-bottom: 24px;
+    font-size: clamp(1.6rem, 5vw, 3rem); color: var(--ink);
+    line-height: 1.1; letter-spacing: -.02em; margin-bottom: 20px;
   }
 
   .ld-fallback-divider {
     height: 3px; width: 56px; border-radius: 3px; border: none;
     background: linear-gradient(90deg, var(--orange), rgba(229,82,45,.3));
-    margin-bottom: 36px;
+    margin-bottom: 28px;
   }
+  @media (min-width: 640px) { .ld-fallback-divider { margin-bottom: 36px; } }
 
   .ld-fallback-desc {
-    font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 17px;
-    color: var(--muted); line-height: 1.75; margin-bottom: 40px;
+    font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 15px;
+    color: var(--muted); line-height: 1.75; margin-bottom: 32px;
     max-width: 580px;
   }
+  @media (min-width: 640px) { .ld-fallback-desc { font-size: 17px; margin-bottom: 40px; } }
 
   .ld-fallback-placeholder {
-    border: 1.5px dashed var(--border); border-radius: 20px;
-    padding: 48px 32px; text-align: center;
+    border: 1.5px dashed var(--border); border-radius: 16px;
+    padding: 32px 20px; text-align: center;
   }
+  @media (min-width: 640px) { .ld-fallback-placeholder { border-radius: 20px; padding: 48px 32px; } }
   .ld-fallback-placeholder p {
     font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 14px;
     color: var(--muted); font-style: italic;
@@ -197,6 +234,7 @@ const style = `
     font-family: 'Playfair Display', serif; font-weight: 800; font-size: 72px;
     color: var(--ink); white-space: nowrap;
   }
+  @media (max-width: 480px) { .ld-watermark { font-size: 40px; } }
 
   /* spin keyframe */
   @keyframes ld-spin { to { transform: rotate(360deg); } }
@@ -256,8 +294,9 @@ const LanguageDetail = () => {
     <>
       <style>{style}</style>
 
+      {/* pt-14 offsets the mobile Sidebar top bar */}
       <div
-        className="ld-root"
+        className="ld-root pt-14 lg:pt-0"
         style={{ display: "flex", height: "100vh", overflow: "hidden" }}
       >
         <Sidebar
@@ -277,9 +316,9 @@ const LanguageDetail = () => {
             <div className="ld-toolbar-left">
               <div className="ld-dot" />
               <button className="ld-back-btn" onClick={() => navigate(-1)}>
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} />
               </button>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div className="ld-file-name">
                   {course.title}<span style={{ color: "var(--orange)" }}>.pdf</span>
                 </div>
@@ -289,11 +328,11 @@ const LanguageDetail = () => {
               </div>
             </div>
 
-            {/* center — page nav */}
+            {/* center — page nav (hidden on mobile) */}
             <div className="ld-toolbar-center">
-              <button className="ld-page-btn"><ChevronLeft size={14} /></button>
+              <button className="ld-page-btn"><ChevronLeft size={13} /></button>
               <span className="ld-page-label">Page 1 / 1</span>
-              <button className="ld-page-btn"><ChevronRight size={14} /></button>
+              <button className="ld-page-btn"><ChevronRight size={13} /></button>
             </div>
 
             {/* right — zoom + fullscreen */}
@@ -303,18 +342,18 @@ const LanguageDetail = () => {
                   className="ld-zoom-btn"
                   onClick={() => setZoom(z => Math.max(50, z - 10))}
                 >
-                  <Minus size={14} />
+                  <Minus size={13} />
                 </button>
                 <span className="ld-zoom-val">{zoom}%</span>
                 <button
                   className="ld-zoom-btn"
                   onClick={() => setZoom(z => Math.min(200, z + 10))}
                 >
-                  <Plus size={14} />
+                  <Plus size={13} />
                 </button>
               </div>
               <button className="ld-icon-btn">
-                <Maximize2 size={16} />
+                <Maximize2 size={15} />
               </button>
             </div>
 
@@ -332,7 +371,7 @@ const LanguageDetail = () => {
               {course.file_path ? (
                 <iframe
                   src={`http://localhost:8000/storage/${course.file_path}#toolbar=0`}
-                  style={{ width: "100%", height: "100%", minHeight: 1100, display: "block", border: "none" }}
+                  style={{ width: "100%", height: "100%", minHeight: 600, display: "block", border: "none" }}
                   title={course.title}
                 />
               ) : (
@@ -353,7 +392,6 @@ const LanguageDetail = () => {
                 </div>
               )}
 
-              {/* watermark */}
               <div className="ld-watermark">CodeLink Secure</div>
             </div>
           </div>
