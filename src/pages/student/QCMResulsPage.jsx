@@ -45,9 +45,6 @@ const style = `
     padding: 32px 16px 48px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-
-    margin-left: 240px;
-    height: calc(100vh - 52px);
   }
 
   /* ── inner max-width wrapper ── */

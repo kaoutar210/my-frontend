@@ -44,9 +44,6 @@ const style = `
     flex: 1;
     min-width: 0;
     overflow-y: auto;
-
-    margin-left: 240px;
-    height: calc(100vh - 52px);
   }
 
   /* ════════════════════════════════════════

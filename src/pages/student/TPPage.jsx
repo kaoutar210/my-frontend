@@ -48,9 +48,6 @@ const style = `
     min-width: 0;
     overflow-y: auto;
     padding: 36px 20px 60px;
-
-    margin-left: 240px;
-    height: calc(100vh - 52px);
   }
 
   /* ── header ── */

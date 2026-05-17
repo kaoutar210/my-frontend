@@ -54,9 +54,6 @@ const style = `
     flex: 1;
     overflow-y: auto;
     min-width: 0;
-
-    margin-left: 240px;
-    height: calc(100vh - 52px);
   }
 
   /* ── back button ── */
