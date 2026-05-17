@@ -44,6 +44,9 @@ const style = `
     display: flex;
     flex-direction: column;
     overflow: hidden;
+
+    margin-left: 240px;
+    height: calc(100vh - 52px);
   }
 
   /* ── full-screen states ── */

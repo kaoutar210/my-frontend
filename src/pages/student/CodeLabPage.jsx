@@ -396,7 +396,7 @@ const CodeLabPage = () => {
       <div className="cl-root">
         <Sidebar brandName="CodeLink" onLogout={() => {}} />
 
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100vh',paddingLeft: '240px',paddingTop: '52px' }}>
 
           {/* TOPBAR */}
           <header className="cl-topbar">
