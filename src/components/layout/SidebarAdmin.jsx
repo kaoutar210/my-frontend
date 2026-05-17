@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,15 +8,17 @@ import {
   Layers,
   Users,
   LogOut,
-   Award,
+  Award,
+  Menu,
+  X,
 } from "lucide-react";
 import logoImg from "../../assets/codelink notebook.png";
 import API from "../../services/api";
-import CertificatManager from "../../pages/admin/certification/CertificatManager";
 
 const SidebarAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const items = [
     { label: "Tableau de bord", path: "/admin/dashboard", icon: LayoutDashboard },
@@ -36,17 +38,28 @@ const SidebarAdmin = () => {
     }
   };
 
-  return (
-    <aside className="w-60 bg-white border-r border-slate-100 flex flex-col fixed h-full z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+  const closeMobile = () => setMobileOpen(false);
 
+  const SidebarContent = () => (
+    <>
       {/* Logo */}
       <div className="px-6 py-6 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <img src={logoImg} alt="logo" className="w-7 h-7 object-contain" />
-          <div className="leading-tight">
-            <span className="text-[#1754be] text-[15px] font-medium tracking-tight">Codelink</span>
-            <span className="text-[#e5522d] text-[15px] font-medium tracking-tight"> Notebook</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src={logoImg} alt="logo" className="w-7 h-7 object-contain" />
+            <div className="leading-tight">
+              <span className="text-[#1754be] text-[15px] font-medium tracking-tight">Codelink</span>
+              <span className="text-[#e5522d] text-[15px] font-medium tracking-tight"> Notebook</span>
+            </div>
           </div>
+          {/* Close button — mobile only */}
+          <button
+            onClick={closeMobile}
+            className="lg:hidden text-slate-400 hover:text-[#e5522d] transition-colors p-1"
+            aria-label="Fermer le menu"
+          >
+            <X size={20} />
+          </button>
         </div>
         <div className="mt-1.5">
           <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
@@ -56,13 +69,13 @@ const SidebarAdmin = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-5 space-y-1">
+      <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
         {items.map((item, i) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
 
           return (
-            <NavLink key={i} to={item.path}>
+            <NavLink key={i} to={item.path} onClick={closeMobile}>
               <motion.div
                 whileHover={{ x: 4 }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all text-sm ${
@@ -71,13 +84,8 @@ const SidebarAdmin = () => {
                     : "text-slate-400 hover:text-[#1754be] hover:bg-[#f0f4ff]"
                 }`}
               >
-                <Icon
-                  size={17}
-                  className={isActive ? "text-[#e5522d]" : ""}
-                />
+                <Icon size={17} className={isActive ? "text-[#e5522d]" : ""} />
                 <span className="font-medium">{item.label}</span>
-
-                {/* Active bar */}
                 {isActive && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#e5522d]" />
                 )}
@@ -96,12 +104,68 @@ const SidebarAdmin = () => {
           <LogOut size={17} />
           Déconnexion
         </button>
-
         <p className="text-[10px] font-medium text-slate-300 uppercase tracking-widest text-center">
           Admin Panel v1.0
         </p>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Mobile top bar ── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-white border-b border-slate-100 flex items-center justify-between px-4 shadow-sm">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="text-slate-400 hover:text-[#1754be] transition-colors p-1"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu size={22} />
+        </button>
+        <div className="flex items-center gap-2">
+          <img src={logoImg} alt="logo" className="w-6 h-6 object-contain" />
+          <span className="text-[#1754be] text-[14px] font-medium tracking-tight">
+            Codelink<span className="text-[#e5522d]"> Notebook</span>
+          </span>
+        </div>
+        {/* Spacer to center logo */}
+        <div className="w-8" />
+      </div>
+
+      {/* ── Mobile drawer backdrop ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            onClick={closeMobile}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Mobile drawer ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="lg:hidden fixed top-0 left-0 h-full w-64 bg-white z-50 flex flex-col shadow-xl"
+          >
+            <SidebarContent />
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* ── Desktop sidebar (always visible) ── */}
+      <aside className="hidden lg:flex w-60 bg-white border-r border-slate-100 flex-col fixed h-full z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <SidebarContent />
+      </aside>
+    </>
   );
 };
 
