@@ -7,30 +7,40 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from "../../components/layout/SidebarStudent";
 import API from "../../services/api";
 
+/* ─────────────────────────────────────────────
+   SCOPED STYLES
+───────────────────────────────────────────── */
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
   :root {
-    --blue:   #1754be;
-    --orange: #e5522d;
-    --white:  #ffffff;
-    --ink:    #0d1b3e;
-    --muted:  #8896b3;
-    --border: #eef0f5;
-    --bg:     #f7f9fc;
+    --blue:       #1754be;
+    --orange:     #e5522d;
+    --white:      #ffffff;
+    --ink:        #0d1b3e;
+    --muted:      #8896b3;
+    --border:     #eef0f5;
+    --bg:         #f7f9fc;
+    --toolbar-h:  56px;
+    --sidebar-top: 3.5rem;   /* hauteur top-bar mobile du Sidebar */
   }
 
-  *, *::before, *::after { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @keyframes ld-spin { to { transform: rotate(360deg); } }
+  .ld-spin { animation: ld-spin 1s linear infinite; }
+
   .ld-root { font-family: 'DM Sans', sans-serif; color: var(--ink); }
 
+  /* ── loaders ── */
   .ld-fullloader {
     display: flex; align-items: center; justify-content: center;
-    height: 100vh; background: var(--bg);
+    height: 100dvh; height: 100vh; background: var(--bg);
   }
-
   .ld-error {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; background: var(--bg); gap: 12px; padding: 24px; text-align: center;
+    height: 100dvh; height: 100vh;
+    background: var(--bg); gap: 12px; padding: 24px; text-align: center;
   }
   .ld-error svg { color: var(--muted); }
   .ld-error p { font-weight: 500; color: var(--muted); font-size: 15px; }
@@ -40,47 +50,67 @@ const style = `
     text-decoration: underline; text-underline-offset: 3px;
   }
 
-  /* ── toolbar: sticky so it stays visible while page scrolls on mobile ── */
-  .ld-toolbar {
-    height: 52px;
-    background: var(--ink);
-    border-bottom: 2px solid var(--blue);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 10px; gap: 6px;
-    position: sticky; top: 0; z-index: 20;
-    flex-shrink: 0;
+  /* ════════════════════════════════════════
+     SHELL
+     Mobile  : sidebar = barre en haut (var(--sidebar-top) = 3.5rem)
+               => hauteur dispo = 100dvh - 3.5rem
+     Desktop : sidebar = colonne gauche
+               => hauteur dispo = 100dvh
+  ════════════════════════════════════════ */
+  .ld-shell {
+    display: flex;
+    height: calc(100dvh - var(--sidebar-top));
+    height: calc(100vh  - var(--sidebar-top));
+    overflow: hidden;
   }
-  @media (min-width: 640px)  { .ld-toolbar { padding: 0 20px; gap: 12px; height: 56px; } }
+  @media (min-width: 1024px) {
+    .ld-shell { height: 100dvh; height: 100vh; }
+  }
+
+  .ld-main {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── toolbar ── */
+  .ld-toolbar {
+    height: var(--toolbar-h);
+    background: var(--ink); border-bottom: 2px solid var(--blue);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px; flex-shrink: 0; z-index: 10; gap: 8px;
+  }
+  @media (min-width: 640px)  { .ld-toolbar { padding: 0 20px; gap: 12px; } }
   @media (min-width: 1024px) { .ld-toolbar { padding: 0 24px; gap: 16px; } }
 
   .ld-toolbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
 
   .ld-back-btn {
-    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
     cursor: pointer; transition: background .2s; color: var(--white);
+    -webkit-tap-highlight-color: transparent;
   }
-  .ld-back-btn:hover { background: rgba(255,255,255,.16); }
+  .ld-back-btn:hover  { background: rgba(255,255,255,.16); }
+  .ld-back-btn:active { background: rgba(255,255,255,.24); }
 
   .ld-file-name {
-    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 12px;
-    color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 110px;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px;
+    color: var(--white); letter-spacing: -.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
   }
-  @media (min-width: 400px)  { .ld-file-name { max-width: 160px; font-size: 13px; } }
-  @media (min-width: 540px)  { .ld-file-name { max-width: 240px; font-size: 14px; } }
-  @media (min-width: 768px)  { .ld-file-name { max-width: 360px; } }
+  @media (min-width: 480px) { .ld-file-name { max-width: 220px; font-size: 14px; } }
+  @media (min-width: 768px) { .ld-file-name { max-width: 340px; } }
 
   .ld-file-meta {
-    font-family: 'JetBrains Mono', monospace; font-size: 8px;
-    letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
-    margin-top: 2px; display: none;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 2px;
   }
-  @media (min-width: 480px) { .ld-file-meta { display: block; } }
+  @media (max-width: 479px) { .ld-file-meta { display: none; } }
 
   .ld-toolbar-center { display: none; align-items: center; gap: 4px; flex-shrink: 0; }
-  @media (min-width: 560px) { .ld-toolbar-center { display: flex; } }
+  @media (min-width: 540px) { .ld-toolbar-center { display: flex; } }
 
   .ld-page-btn {
     width: 26px; height: 26px; border-radius: 8px; border: none;
@@ -91,17 +121,18 @@ const style = `
   .ld-page-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
   .ld-page-label {
     font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
-    color: var(--white); padding: 0 8px; white-space: nowrap;
+    color: var(--white); padding: 0 8px; letter-spacing: .06em; white-space: nowrap;
   }
 
-  .ld-toolbar-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .ld-toolbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  @media (min-width: 640px) { .ld-toolbar-right { gap: 10px; } }
 
   .ld-zoom {
-    display: flex; align-items: center; gap: 4px;
+    display: flex; align-items: center; gap: 6px;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-    border-radius: 8px; padding: 4px 8px;
+    border-radius: 10px; padding: 4px 10px;
   }
-  @media (max-width: 380px) { .ld-zoom { display: none; } }
+  @media (max-width: 400px) { .ld-zoom { display: none; } }
 
   .ld-zoom-btn {
     color: var(--muted); cursor: pointer; transition: color .2s;
@@ -110,70 +141,93 @@ const style = `
   .ld-zoom-btn:hover { color: var(--white); }
   .ld-zoom-val {
     font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
-    color: var(--white); min-width: 28px; text-align: center;
+    color: var(--white); min-width: 32px; text-align: center; letter-spacing: .04em;
   }
 
   .ld-icon-btn {
-    width: 28px; height: 28px; border-radius: 8px; border: none;
+    width: 30px; height: 30px; border-radius: 10px; border: none;
     background: rgba(255,255,255,.07); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .2s, color .2s;
   }
   .ld-icon-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
-  @media (max-width: 420px) { .ld-icon-btn { display: none; } }
+  @media (max-width: 480px) { .ld-icon-btn { display: none; } }
 
   .ld-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: linear-gradient(135deg, var(--blue), var(--orange));
-    flex-shrink: 0; display: none;
+    flex-shrink: 0;
   }
-  @media (min-width: 640px) { .ld-dot { display: block; } }
+  @media (max-width: 639px) { .ld-dot { display: none; } }
 
-  /* ── viewer ── */
+  /* ════════════════════════════════════════
+     VIEWER  —  overflow:hidden car l'iframe
+     gère son propre scroll interne
+  ════════════════════════════════════════ */
   .ld-viewer {
+    flex: 1;
+    overflow: hidden;
     background:
       radial-gradient(ellipse at 20% 50%, rgba(23,84,190,.06) 0%, transparent 60%),
-      repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 40px),
       var(--bg);
-    padding: 16px 8px 40px;
-    display: flex; justify-content: center; align-items: flex-start;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;   /* sheet prend toute la hauteur */
   }
-  @media (min-width: 640px)  { .ld-viewer { padding: 24px 16px 60px; } }
-  @media (min-width: 1024px) { .ld-viewer { padding: 40px 24px; flex: 1; overflow-y: auto; } }
 
-  /* ── PDF sheet ── */
+  /* ════════════════════════════════════════
+     PDF SHEET  — LE VRAI FIX MOBILE
+
+     Problème original :
+       .ld-sheet  avait  min-height: 600px
+       L'iframe avait   height: 100%
+       → Sur mobile, height:100% d'un parent min-height = 0px
+         Le PDF ne montrait qu'une seule page.
+
+     Fix :
+       1. .ld-sheet devient flex column avec une hauteur EXACTE
+          calculée en dvh, sans min-height.
+       2. .ld-iframe prend flex:1 → exactement la hauteur restante.
+       3. Le PDF scrolle nativement dans l'iframe sur tous les devices.
+  ════════════════════════════════════════ */
   .ld-sheet {
     background: var(--white);
-    box-shadow: 0 16px 48px rgba(13,27,62,.12), 0 2px 8px rgba(13,27,62,.08);
+    box-shadow: 0 8px 40px rgba(13,27,62,.13), 0 2px 8px rgba(13,27,62,.07);
     border-radius: 4px;
     width: 100%; max-width: 860px;
     position: relative;
-    transform-origin: top center;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    /* hauteur exacte = écran - top-sidebar - toolbar */
+    height: calc(100dvh - var(--sidebar-top) - var(--toolbar-h));
+    height: calc(100vh  - var(--sidebar-top) - var(--toolbar-h));
+  }
+  @media (min-width: 1024px) {
+    /* pas de top-sidebar sur desktop */
+    .ld-sheet {
+      height: calc(100dvh - var(--toolbar-h));
+      height: calc(100vh  - var(--toolbar-h));
+    }
   }
 
+  /* bande de couleur en haut */
   .ld-sheet::before {
-    content: ''; display: block; height: 4px;
+    content: ''; display: block; height: 4px; flex-shrink: 0;
     background: linear-gradient(90deg, var(--blue), var(--orange));
   }
 
-  /*
-    THE KEY FIX FOR MOBILE:
-    iframe height is viewport-based so it's tall enough to show all PDF content.
-    The PAGE scrolls (not the iframe), giving the native browser PDF scroll experience.
-    On desktop the iframe fills 100% of its fixed-height container.
-  */
+  /* ── iframe : flex:1 = toute la hauteur sous la bande ── */
   .ld-iframe {
-    width: 100%; display: block; border: none;
-    /* Mobile: tall enough so PDF is not clipped */
-    height: 85vh;
-    min-height: 480px;
+    flex: 1;
+    width: 100%;
+    border: none;
+    display: block;
   }
-  @media (min-width: 640px)  { .ld-iframe { height: 90vh; min-height: 680px; } }
-  @media (min-width: 1024px) { .ld-iframe { height: 100%; min-height: 1100px; } }
 
-  /* fallback */
-  .ld-fallback { padding: 28px 20px; }
+  /* ── fallback (pas de file_path) ── */
+  .ld-fallback { padding: 32px 24px; overflow-y: auto; flex: 1; }
   @media (min-width: 640px)  { .ld-fallback { padding: 48px 48px; } }
   @media (min-width: 1024px) { .ld-fallback { padding: 64px 72px; } }
 
@@ -185,56 +239,52 @@ const style = `
     background: linear-gradient(135deg, var(--blue), rgba(23,84,190,.7));
     color: var(--white); margin-bottom: 24px;
   }
-
   .ld-fallback-title {
     font-family: 'Playfair Display', serif; font-weight: 800;
-    font-size: clamp(1.5rem, 5vw, 3rem); color: var(--ink);
+    font-size: clamp(1.6rem, 5vw, 3rem); color: var(--ink);
     line-height: 1.1; letter-spacing: -.02em; margin-bottom: 20px;
   }
-
   .ld-fallback-divider {
     height: 3px; width: 56px; border-radius: 3px; border: none;
     background: linear-gradient(90deg, var(--orange), rgba(229,82,45,.3));
     margin-bottom: 28px;
   }
-
   .ld-fallback-desc {
-    font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 15px;
+    font-weight: 300; font-size: 15px;
     color: var(--muted); line-height: 1.75; margin-bottom: 32px; max-width: 580px;
   }
-  @media (min-width: 640px) { .ld-fallback-desc { font-size: 17px; } }
-
   .ld-fallback-placeholder {
-    border: 1.5px dashed var(--border); border-radius: 16px; padding: 32px 20px; text-align: center;
+    border: 1.5px dashed var(--border); border-radius: 16px;
+    padding: 32px 20px; text-align: center;
   }
-  .ld-fallback-placeholder p {
-    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--muted); font-style: italic;
-  }
+  .ld-fallback-placeholder p { font-size: 14px; color: var(--muted); font-style: italic; }
 
+  /* ── watermark ── */
   .ld-watermark {
-    position: absolute; top: 50%; right: -60px;
-    transform: translateY(-50%) rotate(45deg);
-    pointer-events: none; user-select: none; opacity: .035;
+    position: absolute; bottom: 12px; right: 12px;
+    pointer-events: none; user-select: none; opacity: .04;
     font-family: 'Playfair Display', serif; font-weight: 800;
-    font-size: clamp(28px, 8vw, 72px); color: var(--ink); white-space: nowrap;
+    font-size: clamp(18px, 4vw, 48px); color: var(--ink); white-space: nowrap;
+    transform: rotate(-12deg); transform-origin: bottom right;
   }
-
-  @keyframes ld-spin { to { transform: rotate(360deg); } }
-  .ld-spin { animation: ld-spin 1s linear infinite; }
 `;
 
+/* ─────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────── */
 const LanguageDetail = () => {
   const { languageId } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const courseId = location.state?.courseId;
+  const location       = useLocation();
+  const navigate       = useNavigate();
+  const courseId       = location.state?.courseId;
 
-  const [course, setCourse] = useState(null);
+  const [course,  setCourse]  = useState(null);
   const [loading, setLoading] = useState(true);
-  const [zoom, setZoom] = useState(100);
+  const [zoom,    setZoom]    = useState(100);
 
   useEffect(() => {
-    const fetchCourseDetails = async () => {
+    if (!courseId) { setLoading(false); return; }
+    (async () => {
       try {
         const res = await API.get(`/courses/${courseId}`);
         setCourse(res.data);
@@ -243,10 +293,10 @@ const LanguageDetail = () => {
       } finally {
         setLoading(false);
       }
-    };
-    if (courseId) fetchCourseDetails();
+    })();
   }, [courseId]);
 
+  /* ── loading ── */
   if (loading) return (
     <>
       <style>{style}</style>
@@ -256,6 +306,7 @@ const LanguageDetail = () => {
     </>
   );
 
+  /* ── error ── */
   if (!course) return (
     <>
       <style>{style}</style>
@@ -267,16 +318,14 @@ const LanguageDetail = () => {
     </>
   );
 
+  const pdfSrc = `https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}#toolbar=0&navpanes=0`;
+
   return (
     <>
       <style>{style}</style>
 
-      {/*
-        LAYOUT STRATEGY:
-        Mobile  → normal document flow, the entire PAGE scrolls (no h-screen, no overflow:hidden)
-        Desktop → flex row fills 100vh, only the viewer div scrolls internally
-      */}
-      <div className="ld-root pt-14 lg:pt-0 flex lg:h-screen lg:overflow-hidden">
+      {/* pt-14 = 3.5rem = offset barre top mobile du Sidebar */}
+      <div className="ld-root ld-shell pt-14 lg:pt-0">
 
         <Sidebar
           brandName="CodeLink"
@@ -286,14 +335,14 @@ const LanguageDetail = () => {
           }}
         />
 
-        <main className="flex-1 flex flex-col">
+        <main className="ld-main">
 
-          {/* Toolbar — sticky so it stays at top when page scrolls on mobile */}
+          {/* ── TOOLBAR ── */}
           <header className="ld-toolbar">
             <div className="ld-toolbar-left">
               <div className="ld-dot" />
-              <button className="ld-back-btn" onClick={() => navigate(-1)}>
-                <ChevronLeft size={15} />
+              <button className="ld-back-btn" onClick={() => navigate(-1)} aria-label="Retour">
+                <ChevronLeft size={16} />
               </button>
               <div style={{ minWidth: 0 }}>
                 <div className="ld-file-name">
@@ -306,38 +355,43 @@ const LanguageDetail = () => {
             </div>
 
             <div className="ld-toolbar-center">
-              <button className="ld-page-btn"><ChevronLeft size={13} /></button>
+              <button className="ld-page-btn" aria-label="Page précédente"><ChevronLeft size={13} /></button>
               <span className="ld-page-label">Page 1 / 1</span>
-              <button className="ld-page-btn"><ChevronRight size={13} /></button>
+              <button className="ld-page-btn" aria-label="Page suivante"><ChevronRight size={13} /></button>
             </div>
 
             <div className="ld-toolbar-right">
               <div className="ld-zoom">
-                <button className="ld-zoom-btn" onClick={() => setZoom(z => Math.max(50, z - 10))}>
-                  <Minus size={12} />
+                <button className="ld-zoom-btn" onClick={() => setZoom(z => Math.max(50, z - 10))} aria-label="Zoom -">
+                  <Minus size={13} />
                 </button>
                 <span className="ld-zoom-val">{zoom}%</span>
-                <button className="ld-zoom-btn" onClick={() => setZoom(z => Math.min(200, z + 10))}>
-                  <Plus size={12} />
+                <button className="ld-zoom-btn" onClick={() => setZoom(z => Math.min(200, z + 10))} aria-label="Zoom +">
+                  <Plus size={13} />
                 </button>
               </div>
-              <button className="ld-icon-btn">
-                <Maximize2 size={14} />
+              <button className="ld-icon-btn" aria-label="Plein écran">
+                <Maximize2 size={15} />
               </button>
             </div>
           </header>
 
-          {/* Viewer */}
+          {/* ── VIEWER ── */}
           <div className="ld-viewer">
-            <div
-              className="ld-sheet"
-              style={{ transform: `scale(${zoom / 100})`, width: `min(860px, ${zoom}%)` }}
-            >
+            <div className="ld-sheet">
+
               {course.file_path ? (
                 <iframe
-                  src={`http://localhost:8000/storage/${course.file_path}#toolbar=0`}
                   className="ld-iframe"
+                  src={pdfSrc}
                   title={course.title}
+                  allow="fullscreen"
+                  /*
+                    zoom CSS property : marche sur Chrome/Edge mobile.
+                    Sur Safari on laisse à 100% (pas supporté).
+                    C'est un bonus — le vrai fix est la hauteur flex:1.
+                  */
+                  style={zoom !== 100 ? { zoom: zoom / 100 } : undefined}
                 />
               ) : (
                 <div className="ld-fallback">
@@ -350,7 +404,8 @@ const LanguageDetail = () => {
                   </div>
                 </div>
               )}
-              <div className="ld-watermark">CodeLink Secure</div>
+
+              <div className="ld-watermark" aria-hidden="true">CodeLink Secure</div>
             </div>
           </div>
 
