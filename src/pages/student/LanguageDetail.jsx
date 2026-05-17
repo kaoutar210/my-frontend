@@ -318,8 +318,11 @@ const LanguageDetail = () => {
     </>
   );
 
-  const pdfSrc = `https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}#toolbar=0&navpanes=0`;
-
+const rawPdfUrl = `https://codelink-dng0fcepgjhmfma6.francecentral-01.azurewebsites.net/storage/${course.file_path}`;
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+const pdfSrc = isMobile
+  ? `https://docs.google.com/viewer?url=${encodeURIComponent(rawPdfUrl)}&embedded=true`
+  : `${rawPdfUrl}#toolbar=0&navpanes=0`;
   return (
     <>
       <style>{style}</style>
